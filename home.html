@@ -1,93 +1,92 @@
-<html>
-
-<head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
-    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
-</head>
+<html lang="en-US">
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
 
 <body ng-app="home" ng-controller="controller">
     <div>
         <h1>Welcome {{ userEmail }}</h1>
-        <button ng-click="logout()"> logout</button>
+        <button ng-click="logout()">logout</button>
     </div>
 
     <div>
         <form novalidate>
-            Service Name:
+            Food/Drink:
+            <input type="text" ng-model="type">
+            <br> What you want:
+            <input type="text" ng-model="order">
+            <br> Quanity:
+            <input type="text" ng-model="orderQuanity">
+            <br> Hole Number:
+            <input type="text" ng-model="holeNumber">
             <br>
-            <input type="text" ng-model="servicename">
-            <br>
-            <button ng-click="submit()">submit</button>
-
+            <button ng-click="submit()">Place Order</button>
         </form>
     </div>
-
-    <ul>
-        <strong>Pending Requests (No Provider Yet)</strong>
-        <li ng-repeat="obj in userRequests" | filter:{ provider: 'n/a'} class="service_request_data">
-            <strong>Name: </strong> {{ obj.name }}
-        </li>
-    </ul>
-
-    <ul>
-        <strong>Incomplete Jobs</strong>
-        <li ng-repeat="obj in userRequests" | filter:{completed: false, provider: '!n/a'} class="incompleteJobs">
-            <strong>Name: </strong> {{ obj.name }}
-        </li>
-    </ul>
-
-    <ul>
-        <strong>Complete Jobs</strong>
-        <li ng-repeat="obj in userRequests" | filter:{completed: true} class="incompleteJobs">
-            <strong>Name: </strong> {{ obj.name }}
-        </li>
-    </ul>
+    <div>
+        <h3>Pending Requests (no provider yet)</h3>
+        <ul>
+            <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a'}">{{ obj.type }} : {{ obj.order }}</li>
+        </ul>
+    </div>
+    <div>
+        <h3>Incomplete Jobs</h3>
+        <ul>
+            <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: '!n/a'}">{{ obj.type }} : {{ obj.order }} ({{ obj.provider}})</li>
+        </ul>
+    </div>
+    <div>
+        <h3>Completed Jobs</h3>
+        <ul>
+            <li ng-repeat="obj in service_request_data | filter:{ completed: true}">{{ obj.type }} : {{ obj.order }} : ({{ obj.provider}})</li>
+        </ul>
+    </div>
 
     <script>
-        var myApp = angular.module("home", ["firebase"]);
-
-        myApp.controller("controller", ["$scope", "$firebaseArray",
-            function($scope, $firebaseArray) {
-                var ref = new Firebase("https://bevcart.firebaseio.com");
-                var roleRef = ref.child("role");
-                var authData = ref.getAuth();
-                if (authData) {
-                    roleRef.child(authData.uid).on("value", function(data) {
-
-                        if (data.val() == "provider") {
-                            window.location.href = "providerHome.html";
-                        } else if (data.val() == "admin") {
-                            window.location.href = "adminHome.html";
-                        }
-                    });
-
-                } else {
-                    window.location.href = "index.html";
-                }
-
-                $scope.userEmail = authData.password.email;
-
-                var service_requests = ref.child("service_requests");
-
-                $scope.userRequests = $firebaseArray(service_requests.orderByChild("user").equalTo(authData.uid));
-
-                $scope.submit = function() {
-                    service_requests.push().set({
-                        user: authData.uid,
-                        provider: "n/a",
-                        name: $scope.servicename,
-                        isCompleted: false
-                    });
-                    $scope.servicename = "";
-                };
-
-                $scope.logout = function() {
-                    ref.unauth();
-                    window.location.href = "index.html";
-                }
+        var app = angular.module('home', ["firebase"]);
+        app.controller('controller', function($scope, $firebaseArray) {
+            var ref = new Firebase("https://bevcart.firebaseio.com/");
+            var authData = ref.getAuth();
+            //console.log(authData);
+            if (authData) {
+                ref.child("role").child(authData.uid).on("value", function(data) {
+                    if (data.val() == "provider") {
+                        window.location.href = "providerHome.html";
+                    } else if (data.val() == "admin") {
+                        window.location.href = "adminHome.html";
+                    }
+                });
+            } else {
+                window.location.href = "index.html";
             }
-        ]);
+            //if we still alive we are logged in and a normal user
+            $scope.userEmail = authData.password.email;
+            //get the data for our pending service requests
+            var service_requests = ref.child("service_requests");
+            $scope.service_request_data = $firebaseArray(service_requests.orderByChild("user").equalTo(authData.uid));
+
+            $scope.submit = function() {
+                //save the new service request to firebase
+                service_requests.push({
+                    user: authData.uid,
+                    type: $scope.type,
+                    order: $scope.order,
+                    quanity: $scope.orderQuanity,
+                    location: $scope.holeNumber,
+                    provider: "n/a",
+                    completed: false
+                });
+                $scope.type = "";
+                $scope.order = "";
+                $scope.orderQuanity = "";
+                $scope.holeNumber = "";
+
+            }
+            $scope.logout = function() {
+                ref.unauth();
+                window.location.href = "index.html";
+            }
+        });
 
     </script>
 </body>
