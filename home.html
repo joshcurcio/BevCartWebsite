@@ -1,0 +1,95 @@
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
+</head>
+
+<body ng-app="home" ng-controller="controller">
+    <div>
+        <h1>Welcome {{ userEmail }}</h1>
+        <button ng-click="logout()"> logout</button>
+    </div>
+
+    <div>
+        <form novalidate>
+            Service Name:
+            <br>
+            <input type="text" ng-model="servicename">
+            <br>
+            <button ng-click="submit()">submit</button>
+
+        </form>
+    </div>
+
+    <ul>
+        <strong>Pending Requests (No Provider Yet)</strong>
+        <li ng-repeat="obj in userRequests" | filter:{ provider: 'n/a'} class="service_request_data">
+            <strong>Name: </strong> {{ obj.name }}
+        </li>
+    </ul>
+
+    <ul>
+        <strong>Incomplete Jobs</strong>
+        <li ng-repeat="obj in userRequests" | filter:{completed: false, provider: '!n/a'} class="incompleteJobs">
+            <strong>Name: </strong> {{ obj.name }}
+        </li>
+    </ul>
+
+    <ul>
+        <strong>Complete Jobs</strong>
+        <li ng-repeat="obj in userRequests" | filter:{completed: true} class="incompleteJobs">
+            <strong>Name: </strong> {{ obj.name }}
+        </li>
+    </ul>
+
+    <script>
+        var myApp = angular.module("home", ["firebase"]);
+
+        myApp.controller("controller", ["$scope", "$firebaseArray",
+            function($scope, $firebaseArray) {
+                var ref = new Firebase("https://bevcart.firebaseio.com");
+                var roleRef = ref.child("role");
+                var authData = ref.getAuth();
+                if (authData) {
+                    roleRef.child(authData.uid).on("value", function(data) {
+
+                        if (data.val() == "provider") {
+                            window.location.href = "providerHome.html";
+                        } else if (data.val() == "admin") {
+                            window.location.href = "adminHome.html";
+                        }
+                    });
+
+                } else {
+                    window.location.href = "index.html";
+                }
+
+                $scope.userEmail = authData.password.email;
+
+                var service_requests = ref.child("service_requests");
+
+                $scope.userRequests = $firebaseArray(service_requests.orderByChild("user").equalTo(authData.uid));
+
+                $scope.submit = function() {
+                    service_requests.push().set({
+                        user: authData.uid,
+                        provider: "n/a",
+                        name: $scope.servicename,
+                        isCompleted: false
+                    });
+                    $scope.servicename = "";
+                };
+
+                $scope.logout = function() {
+                    ref.unauth();
+                    window.location.href = "index.html";
+                }
+            }
+        ]);
+
+    </script>
+</body>
+
+</html>

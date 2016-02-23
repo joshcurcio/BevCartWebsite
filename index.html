@@ -1,0 +1,59 @@
+<html ng-app="myApp">
+
+<head>
+    <!-- AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
+
+    <!-- AngularFire -->
+    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
+</head>
+
+<body>
+    <div ng-app="myApp" ng-controller="formCtrl">
+        <form novalidate>
+            Username:
+            <br>
+            <input type="text" ng-model="user.username">
+            <br> Password:
+            <br>
+            <input type="password" ng-model="user.password">
+            <br>
+            <button ng-click="login()"> login</button>
+
+        </form>
+        <p>username = {{username}}</p>
+        <p>password = {{password}}</p>
+    </div>
+
+    <script>
+        var myApp = angular.module("myApp", ["firebase"]);
+
+        myApp.controller("formCtrl", function($scope) {
+
+            //CREATE A FIREBASE REFERENCE
+            var ref = new Firebase("https://bevcart.firebaseio.com");
+
+            $scope.login = function() {
+                ref.authWithPassword({
+                    email: $scope.user.username,
+                    password: $scope.user.password
+                }, function(error, authData) {
+                    if (error) {
+                        console.log("Login Failed!", error);
+                    } else {
+                        console.log("Authenticated successfully with payload:", authData);
+                        window.location.href = "home.html";
+                    }
+                });
+                $scope.email = "";
+                $scope.password = "";
+            }
+        });
+
+    </script>
+</body>
+
+</html>
