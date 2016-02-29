@@ -16,7 +16,7 @@
         <h3>Pending Requests (no provider yet)</h3>
         <ul>
             <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a'}">
-                {{ obj.$id }} : {{ obj.type }} : {{ obj.order }}
+                ID: {{ obj.$id }} : {{ obj.type }} : {{ obj.order }}
             </li>
         </ul>
     </div>
@@ -24,7 +24,7 @@
         <h3>Incomplete Jobs</h3>
         <ul>
             <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: authData.uid}">
-                {{ obj.$id }} : {{ obj.type }} : {{ obj.order }} ({{ obj.provider}})
+                ID: {{ obj.$id }} : {{ obj.type }} : {{ obj.order }} ({{ obj.provider}})
             </li>
         </ul>
     </div>
@@ -32,7 +32,7 @@
         <h3>Completed Jobs</h3>
         <ul>
             <li ng-repeat="obj in service_request_data | filter:{ provider: authData.uid, completed: true}">
-                {{ obj.type }} : {{ obj.order }} : ({{ obj.provider}})
+                ID: {{ obj.type }} : {{ obj.order }} : ({{ obj.provider}})
             </li>
         </ul>
     </div>
@@ -47,14 +47,14 @@
     <script>
         var myApp = angular.module("provider-home", ["firebase"]);
 
-        myApp.controller('controller', function($scope, $firebaseArray) {
+        myApp.controller("controller", function($scope, $firebaseArray) {
 
             var ref = new Firebase("https://bevcart.firebaseio.com");
             var roleRef = ref.child("role");
-            var authData = ref.getAuth();
+            $scope.authData = ref.getAuth();
 
-            if (authData) {
-                roleRef.child(authData.uid).on("value", function(data) {
+            if ($scope.authData) {
+                roleRef.child($scope.authData.uid).on("value", function(data) {
                     if (data.val() != "provider") {
                         window.location.href = "home.html";
                     }
@@ -63,6 +63,8 @@
             } else {
                 window.location.href = "index.html";
             }
+
+            $scope.userEmail = $scope.authData.password.email;
 
             var service_requests = ref.child("service_requests");
             $scope.service_request_data = $firebaseArray(service_requests);
@@ -75,7 +77,7 @@
 
             $scope.acceptJob = function() {
                 service_requests.child($scope.jobID).update({
-                    provider: authData.uid
+                    provider: $scope.authData.uid
                 });
             }
 
