@@ -1,59 +1,109 @@
-<html ng-app="myApp">
+<!--
+Author: W3layouts
+Author URL: http://w3layouts.com
+License: Creative Commons Attribution 3.0 Unported
+License URL: http://creativecommons.org/licenses/by/3.0/
+-->
+<!DOCTYPE html>
+<html>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
+<script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
+<script src="controllers/indexController.js"></script>
+<script src="controllers/userController.js"></script>
 
 <head>
-    <!-- AngularJS -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.15/angular.min.js"></script>
+    <title>BevCart</title>
+    <meta charset="utf-8">
+    <link href="css/style.css" rel='stylesheet' type='text/css' />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="application/x-javascript">
+        addEventListener("load", function() {
+            setTimeout(hideURLbar, 0);
+        }, false);
 
-    <!-- Firebase -->
-    <script src="https://cdn.firebase.com/js/client/2.2.4/firebase.js"></script>
-
-    <!-- AngularFire -->
-    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
-</head>
-
-<body>
-    <div ng-app="myApp" ng-controller="formCtrl">
-        <form novalidate>
-            Username:
-            <br>
-            <input type="text" ng-model="user.username">
-            <br> Password:
-            <br>
-            <input type="password" ng-model="user.password">
-            <br>
-            <button ng-click="login()"> login</button>
-
-        </form>
-        <p>username = {{username}}</p>
-        <p>password = {{password}}</p>
-    </div>
-
-    <script>
-        var myApp = angular.module("myApp", ["firebase"]);
-
-        myApp.controller("formCtrl", function($scope) {
-
-            //CREATE A FIREBASE REFERENCE
-            var ref = new Firebase("https://bevcart.firebaseio.com");
-
-            $scope.login = function() {
-                ref.authWithPassword({
-                    email: $scope.user.username,
-                    password: $scope.user.password
-                }, function(error, authData) {
-                    if (error) {
-                        console.log("Login Failed!", error);
-                    } else {
-                        console.log("Authenticated successfully with payload:", authData);
-                        window.location.href = "home.html";
-                    }
-                });
-                $scope.email = "";
-                $scope.password = "";
-            }
-        });
+        function hideURLbar() {
+            window.scrollTo(0, 1);
+        }
 
     </script>
+    <!--webfonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:600italic,400,300,600,700' rel='stylesheet' type='text/css'>
+    <!--//webfonts-->
+</head>
+
+<body ng-app="bevcartApp" ng-controller="indexController">
+  <form action="" method="POST">
+    <script
+      src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+      data-key="pk_test_Fl7f4dTgK6cFSuhJxjT1i19p"
+      data-image="/images/beverageCart.png"
+      data-name="BevCart Checkout"
+      data-description="Order"
+      data-amount="({{ numOfBeer }} *250)+({{ numOfHotDogs }} *150)+({{ numOfBurgers }}*300)+({{ numOfChips }} *100)"
+      data-locale="auto">
+    </script>
+    <input type="text" placeholder="{{ numOfBeer}} *2.50 + {{ numOfHotDogs }} *1.50 + {{ numOfBurgers }} *3.00 + {{ numOfChips }} *1.00" ng-model="test1234">
+  </form>
+    <div ng-if="isAuthenticated == false" class="login-form">
+        <form ng-controller="indexController">
+            <img align="center" src="images/beverageCart.png" alt="" />
+            <br/>&nbsp;
+            <li>
+                <input type="text" class="text" ng-model="username" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'USERNAME';}">
+                <a href="#" class=" icon user"></a>
+            </li>
+            <li>
+                <input type="password" ng-model="password" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Password';}">
+                <a href="#" class=" icon lock"></a>
+            </li>
+            <div>
+                <input type="submit" ng-click="login()" value="SIGN IN">
+            </div>
+        </form>
+    </div>
+    <div ng-if="isAuthenticated == true">
+        <h1>Welcome {{ userEmail }} - {{ role }}</h1>
+        <button ng-click="logout()">logout</button>
+
+        <div ng-if="role == 'user'" ng-controller="userController">
+            <h1>{{ value }}</h1>
+            <div>
+                <form novalidate>
+                    <h2> Beverage Cart Order: </h2>
+                    <br> Beer:
+                    <input type="number" ng-model="numOfBeer">
+                    <br> Hot Dogs:
+                    <input type="number" ng-model="numOfHotDogs">
+                    <br> Burgers:
+                    <input type="number" ng-model="numOfBurgers">
+                    <br> Chips:
+                    <input type="number" ng-model="numOfChips">
+                    <br> Hole Number:
+                    <input type="number" ng-model="holeNumber">
+                    <br>
+                </form>
+            </div>
+            <div>
+                <h3>Pending Requests (no provider yet)</h3>
+                <ul>
+                    <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a'}">{{ obj.name }}</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Incomplete Jobs</h3>
+                <ul>
+                    <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: '!n/a'}">{{ obj.name }} ({{ obj.provider}})</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Completed Jobs</h3>
+                <ul>
+                    <li ng-repeat="obj in service_request_data | filter:{ completed: true}">{{ obj.name }} ({{ obj.provider}})</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
