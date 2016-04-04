@@ -7,10 +7,12 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 <!DOCTYPE html>
 <html>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <script src="https://cdn.firebase.com/js/client/2.4.1/firebase.js"></script>
 <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
 <script src="controllers/indexController.js"></script>
 <script src="controllers/userController.js"></script>
+<script type="text/javascript" src="https://js.stripe.com/v2/"></script>
 
 <head>
     <title>BevCart</title>
@@ -25,7 +27,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         function hideURLbar() {
             window.scrollTo(0, 1);
         }
-
     </script>
     <!--webfonts-->
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:600italic,400,300,600,700' rel='stylesheet' type='text/css'>
@@ -33,18 +34,6 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 </head>
 
 <body ng-app="bevcartApp" ng-controller="indexController">
-  <form action="" method="POST">
-    <script
-      src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-      data-key="pk_test_Fl7f4dTgK6cFSuhJxjT1i19p"
-      data-image="/images/beverageCart.png"
-      data-name="BevCart Checkout"
-      data-description="Order"
-      data-amount="({{ numOfBeer }} *250)+({{ numOfHotDogs }} *150)+({{ numOfBurgers }}*300)+({{ numOfChips }} *100)"
-      data-locale="auto">
-    </script>
-    <input type="text" placeholder="{{ numOfBeer}} *2.50 + {{ numOfHotDogs }} *1.50 + {{ numOfBurgers }} *3.00 + {{ numOfChips }} *1.00" ng-model="test1234">
-  </form>
     <div ng-if="isAuthenticated == false" class="login-form">
         <form ng-controller="indexController">
             <img align="center" src="images/beverageCart.png" alt="" />
@@ -63,26 +52,31 @@ License URL: http://creativecommons.org/licenses/by/3.0/
         </form>
     </div>
     <div ng-if="isAuthenticated == true">
+
         <h1>Welcome {{ userEmail }} - {{ role }}</h1>
         <button ng-click="logout()">logout</button>
 
         <div ng-if="role == 'user'" ng-controller="userController">
             <h1>{{ value }}</h1>
             <div>
-                <form novalidate>
+                <form novalidate style="background-color:">
                     <h2> Beverage Cart Order: </h2>
                     <br> Beer:
-                    <input type="number" ng-model="numOfBeer">
+                    <input type="text" ng-model="numOfBeer">
                     <br> Hot Dogs:
-                    <input type="number" ng-model="numOfHotDogs">
+                    <input type="text" ng-model="numOfHotDogs">
                     <br> Burgers:
-                    <input type="number" ng-model="numOfBurgers">
+                    <input type="text" ng-model="numOfBurgers">
                     <br> Chips:
-                    <input type="number" ng-model="numOfChips">
+                    <input type="text" ng-model="numOfChips">
                     <br> Hole Number:
-                    <input type="number" ng-model="holeNumber">
+                    <input type="text" ng-model="holeNumber">
                     <br>
+                    <script src="https://checkout.stripe.com/checkout.js"></script>
+
+                    <button submit()>Purchase</button>
                 </form>
+
             </div>
             <div>
                 <h3>Pending Requests (no provider yet)</h3>
