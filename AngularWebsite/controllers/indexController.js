@@ -24,8 +24,8 @@ myApp.controller("indexController", function ($scope) {
 
     $scope.login = function () {
         ref.authWithPassword({
-            email: $scope.username,
-            password: $scope.password
+            email: this.username,
+            password: this.password
         }, function (error, authData) {
             if (error) {
                 console.log("Login Failed!", error);
