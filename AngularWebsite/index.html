@@ -12,25 +12,37 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
 <script src="controllers/indexController.js"></script>
 <script src="controllers/userController.js"></script>
+<script src="controllers/providerController.js"></script>
+<script src="controllers/adminController.js"></script>
 
 <head>
-	<title>BevCart Home</title>
-		<meta charset="utf-8">
-		<link href="css/style.css" rel='stylesheet' type='text/css' />
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
-		<!--webfonts-->
-		<link href='http://fonts.googleapis.com/css?family=Open+Sans:600italic,400,300,600,700' rel='stylesheet' type='text/css'>
-		<!--//webfonts-->
+    <title>BevCart Home</title>
+    <meta charset="utf-8">
+    <link href="css/style.css" rel='stylesheet' type='text/css' />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="application/x-javascript">
+        addEventListener("load", function() {
+            setTimeout(hideURLbar, 0);
+        }, false);
+
+        function hideURLbar() {
+            window.scrollTo(0, 1);
+        }
+
+    </script>
+    <!--webfonts-->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:600italic,400,300,600,700' rel='stylesheet' type='text/css'>
+    <!--//webfonts-->
 </head>
 
 <body ng-app="bevcartApp" ng-controller="indexController">
     <div ng-if="isAuthenticated == false" class="login-form">
         <form>
-            <img src="images/beverageCart.png" alt=""/><br/>&nbsp;
+            <img src="images/beverageCart.png" alt="" />
+            <br/>&nbsp;
             <li>
                 <input type="text" ng-model="username" placeholder="Username">
-                <a href="#" class=" icon user"></a>
+                </a>
             </li>
             <li>
                 <input type="password" ng-model="password" placeholder="Password">
@@ -47,101 +59,167 @@ License URL: http://creativecommons.org/licenses/by/3.0/
 
         <div id="main" ng-if="role == 'user'" ng-controller="userController">
 
-          <script src="https://checkout.stripe.com/checkout.js"></script>
-          <script>
-          var handler = StripeCheckout.configure({
-            key: 'pk_test_Fl7f4dTgK6cFSuhJxjT1i19p',
-            image: '/img/documentation/checkout/marketplace.png',
-            locale: 'auto',
-            token: function(token)
-            {
-              var scope = angular.element(document.getElementById("main")).scope();
-              scope = scope.$$childHead;
+            <script src="https://checkout.stripe.com/checkout.js"></script>
+            <script>
+                var handler = StripeCheckout.configure({
+                    key: 'pk_test_Fl7f4dTgK6cFSuhJxjT1i19p',
+                    image: '',
+                    locale: 'auto',
+                    token: function(token) {
+                        var scope = angular.element(document.getElementById("main")).scope();
+                        scope = scope.$$childHead;
+                        var cost = scope.numOfBeer * 250 + scope.numOfHotDogs * 150 + scope.numOfBurgers * 300 + scope.numOfChips * 100;
 
-              var cost = scope.numOfBeer * 250 + scope.numOfHotDogs * 150 + scope.numOfBurgers * 300 + scope.numOfChips * 100;
+                        $.post("http://localhost:3000/checkout", {
+                            stripeToken: token.id,
+                            amount: cost
+                        }, function(result) {
+                            console.log(result);
+                            if (result == 'success') {
+                                //reset form
+                                console.log("in reset");
+                                //save to firebase
+                                scope.newServiceRequest(cost);
+                                scope.reset();
+                            } else {
+                                console.log("blah");
+                            }
+                        });
+                        // Use the token to create the charge with a server-side script.
+                        // You can access the token ID with `token.id`
+                    }
+                });
 
-              console.log(cost);
+                function purchaseButtonPressed() {
+                    var scope = angular.element(document.getElementById("main")).scope();
+                    scope = scope.$$childHead;
+                    if ((scope.numOfBeer > 0 || scope.numOfHotDogs > 0 || scope.numOfChips > 0 || scope.numOfBurgers > 0) && (scope.holeNumber > 0 && scope.holeNumber <= 18)) {
+                        var orderQuant = scope.numOfBeer + scope.numOfHotDogs + scope.numOfBurgers + scope.numOfChips;
+                        var cost = scope.numOfBeer * 250 + scope.numOfHotDogs * 150 + scope.numOfBurgers * 300 + scope.numOfChips * 100;
 
-            	$.post( "http://localhost:3000/checkout", { stripeToken: token.id, amount: cost }, function(result)
-            	{
-        			console.log(result);
-        			if(result == 'success')
-        			{
-        				//reset form
-        				console.log("in reset");
+                        handler.open({
+                            name: 'BevCart Checkout: ' + 'Beverage and Food',
+                            description: "Order Size: " + orderQuant,
+                            amount: cost
+                        });
+                    } else {
+                        console.log("invalid entry");
+                    }
+                }
+                // Close Checkout on page navigation
+                $(window).on('popstate', function() {
+                    handler.close();
+                });
 
-        				//save to firebase
-        				scope.newServiceRequest(cost);
-								scope.reset();
-
-        			}
-        			else
-        			{
-        				console.log("blah");
-        			}
-    			});
-		      // Use the token to create the charge with a server-side script.
-		      // You can access the token ID with `token.id`
-		    }
-		  });
-		  function purchaseButtonPressed()
-		  {
-		  	var scope = angular.element(document.getElementById("main")).scope();
-		  	scope = scope.$$childHead;
-
-        var orderQuant = 0 * scope.numOfBeer + scope.numOfHotDogs + scope.numOfBurgers + scope.numOfChips;
-		  	var cost = scope.numOfBeer * 250 + scope.numOfHotDogs * 150 + scope.numOfBurgers * 300 + scope.numOfChips * 100;
-
-		    handler.open({
-		      name: 'BevCart Checkout: ' + 'Beverage and Food',
-		      description: "Order Size: " + orderQuant,
-		      amount: cost
-		    });
-		  }
-		  // Close Checkout on page navigation
-		  $(window).on('popstate', function() {
-		    handler.close();
-		  });
-		</script>
-
+            </script>
             <h1>{{ value }}</h1>
             <div>
                 <form novalidate style="background-color:">
                     <h2> Beverage Cart Order: </h2>
                     <br> Beer:
-                    <input type="text" ng-model="numOfBeer">
+                    <input type="number" ng-model="numOfBeer" min="0" value="0">
                     <br> Hot Dogs:
-                    <input type="text" ng-model="numOfHotDogs">
+                    <input type="number" ng-model="numOfHotDogs" min="0" value="0">
                     <br> Burgers:
-                    <input type="text" ng-model="numOfBurgers">
+                    <input type="number" ng-model="numOfBurgers" min="0" value="0">
                     <br> Chips:
-                    <input type="text" ng-model="numOfChips">
+                    <input type="number" ng-model="numOfChips" min="0" value="0">
                     <br> Hole Number:
-                    <input type="text" ng-model="holeNumber">
+                    <input type="number" ng-model="holeNumber" min="0" value="0">
                     <br>
-                    <button ng-if="numOfBeer > 0" onclick="purchaseButtonPressed()">Purchase</button>
+                    <button ng-if="(numOfBeer > 0 || numOfHotDogs > 0 || numOfChips > 0 || numOfBurgers > 0) && (holeNumber > 0 && holeNumber <= 18)" onclick="purchaseButtonPressed()">Purchase</button>
                 </form>
             </div>
-            <div>
+            <td width="50%">
                 <h3>Pending Requests (no provider yet)</h3>
                 <ul>
-                    <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a'}">{{ obj.name }}</li>
+                    <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a', user: myUID}">Waiting For A Provider - {{ obj.name }} ({{ obj.size}} - items)</li>
                 </ul>
-            </div>
-            <div>
-                <h3>Incomplete Jobs</h3>
-                <ul>
-                    <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: '!n/a'}">{{ obj.name }} ({{ obj.provider}})</li>
-                </ul>
-            </div>
-            <div>
-                <h3>Completed Jobs</h3>
-                <ul>
-                    <li ng-repeat="obj in service_request_data | filter:{ completed: true}">{{ obj.name }} ({{ obj.provider}})</li>
-                </ul>
-            </div>
+            </td>
+            </tr>
+            <tr>
+                <td width="50%">
+                    <h3>Incomplete Jobs</h3>
+                    <ul>
+                        <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: '!n/a'}">Waiting For Service Completion - {{ obj.name }} ({{ obj.size}} - cars)</li>
+                    </ul>
+                </td>
+                <td width="50%">
+                    <h3>Completed Jobs</h3>
+                    <ul>
+                        <li ng-repeat="obj in service_request_data | filter:{ completed: true}">Completed Service - {{ obj.name }} ({{ obj.size}} - cars)</li>
+                    </ul>
+                </td>
+            </tr>
+            </table>
         </div>
-    </div>
-</body>
 
-</html>
+        <div id="main" ng-if="role == 'provider'" ng-controller="providerController">
+            <table width="50%">
+                <tr>
+                    <td>
+                        <h3>Pending Requests (no provider yet)</h3>
+                        <ul>
+                            <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a'}">
+                                <button ng-click="claimRequest(obj)">Accept - {{ obj.name }} ({{ obj.size}} - cars)</button>
+                            </li>
+                        </ul>
+                    </td>
+                    <td width="50%">
+                        <h3>Accepted Jobs</h3>
+                        <ul>
+                            <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: myUID}">
+                                <button ng-click="completeRequest(obj)">Complete - {{ obj.name }} ({{ obj.size}} - cars)</button>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="50%">
+                        <h3>Completed Jobs</h3>
+                        <ul>
+                            <li ng-repeat="obj in service_request_data | filter:{ completed: true, provider: myUID}">{{ obj.name }} ({{ obj.size}} - cars) -> ${{obj.cost/100*0.8}}</li>
+                        </ul>
+                    </td>
+                    <td width="50%">
+                        <h3>Account Balance</h3>
+                        <ul>
+                            <li>${{myAccountTotal}}</li>
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="main" ng-if="role == 'admin'" ng-controller="adminController">
+            <table width="50%">
+                <tr>
+                    <td>
+                        <h3>Pending Requests (no provider yet)</h3>
+                        <ul>
+                            <li ng-repeat="obj in service_request_data | filter:{ provider: 'n/a'}">{{ obj.name }} ({{ obj.size}} - cars)</li>
+                        </ul>
+                    </td>
+                    <td width="50%">
+                        <h3>Accepted Jobs</h3>
+                        <ul>
+                            <li ng-repeat="obj in service_request_data | filter:{ completed: false, provider: '!n/a'}">{{ obj.name }} ({{ obj.size}} - cars)</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <td width="50%">
+                        <h3>Completed Jobs</h3>
+                        <ul>
+                            <li ng-repeat="obj in service_request_data | filter:{ completed: true, provider: '!n/a'}">
+                                <button ng-click="payoutProvider(obj)">Payout - {{ obj.name }} ({{ obj.size}} - cars) -> ${{obj.cost/100*0.8}}</button>
+                            </li>
+                        </ul>
+                    </td>
+                    <td width="50%">
+                        <h3>Account Balance</h3>
+                        <ul>
+                            <li>${{myAccountTotal}}</li>
+                        </ul>
+                    </td>
+                </tr>

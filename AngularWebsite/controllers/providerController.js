@@ -1,32 +1,31 @@
-var app = angular.module('providerApp', ["firebase"]);
+var app = angular.module('bevcartApp');
 app.controller('providerController', function ($scope, $firebaseArray) {
     var ref = new Firebase("https://bevcart.firebaseio.com/");
-    $scope.authData = ref.getAuth();
-    console.log($scope.authData);
-    $scope.role = null;
-    if ($scope.authData) {
-        //What role are we?
-        ref.child("role").child(authData.uid).on("value", function (data) {
-            //set role to user, admin, or provider
-            $scope.role = data.val();
+    var authData = ref.getAuth();
+    $scope.myUID = authData.uid;
+
+    //get the data for our pending service requests
+    var service_requests = ref.child("service_requests");
+    $scope.service_request_data = $firebaseArray(service_requests);
+
+    $scope.service_request_data.$loaded().then(function (data) {
+        $scope.myAccountTotal = 0;
+        angular.forEach(data, function (obj, key) {
+            console.log("checking: " + obj);
+            console.log("key " + key);
+            if (obj.completed == true && obj.provider == $scope.myUID) {
+                $scope.myAccountTotal += (obj.cost / 100 * 0.8);
+            }
         });
+    });
 
-        //if we still alive we are logged in
-        $scope.userEmail = $scope.authData.password.email;
+    $scope.claimRequest = function (obj) {
+        obj.provider = authData.uid;
+        $scope.service_request_data.$save(obj);
+    };
 
-        //get the data for our pending service requests
-        var service_requests = ref.child("service_requests");
-        $scope.service_request_data = $firebaseArray(service_requests.orderByChild("provider"));
-
-        $scope.acceptJob = function () {
-            service_requests.child($scope.jobID).update({
-                provider: $scope.authData.uid
-            });
-        }
-
-        $scope.logout = function () {
-            ref.unauth();
-            window.location.href = "index.html";
-        }
-    }
+    $scope.completeRequest = function (obj) {
+        obj.completed = true;
+        $scope.service_request_data.$save(obj);
+    };
 });

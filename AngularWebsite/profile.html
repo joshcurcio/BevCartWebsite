@@ -11,18 +11,28 @@
 
 <body>
     <div ng-app="profileApp" ng-controller="profileController">
-      <h1> Profile </h1>
-      <form novalidate>
-        First Name: <input type="text" ng-model="fname"><br>
-        Last Name: <input type="text" ng-model="lname"><br>
-        Email: {{ email }} <br>
-        Phone: <input type="text" ng-model="phone"> <br>
-        Street: <input type="text" ng-model="street"> <br>
-        City: <input type="text" ng-model="city"> <br>
-        State: <input type="text" ng-model="state"> <br>
-        Zip: <input type="text" ng-model="zip"> <br>
-        <button ng-click="saveProfile()"> Save Profile </button> <br>
-      </form>
+        <h1> Profile </h1>
+        <form novalidate>
+            First Name:
+            <input type="text" ng-model="fname">
+            <br> Last Name:
+            <input type="text" ng-model="lname">
+            <br> Email: {{ email }}
+            <br> Phone:
+            <input type="text" ng-model="phone">
+            <br> Street:
+            <input type="text" ng-model="street">
+            <br> City:
+            <input type="text" ng-model="city">
+            <br> State:
+            <input type="text" ng-model="state">
+            <br> Zip:
+            <input type="text" ng-model="zip">
+            <br>
+            <button ng-click="saveProfile()"> Save Profile </button>
+            <br>
+        </form>
     </div>
-  </body>
-  </html>
+</body>
+
+</html>
